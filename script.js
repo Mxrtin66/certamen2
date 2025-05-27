@@ -1,85 +1,101 @@
 const form = document.getElementById('studentForm');
 const tableBody = document.querySelector('#studentsTable tbody');
 const averageDisplay = document.getElementById('average');
-
+const statsDisplay = document.getElementById('stats');
 const nameInput = document.getElementById('name');
 const lastNameInput = document.getElementById('lastName');
 const gradeInput = document.getElementById('grade');
-
 const nameError = document.getElementById('nameError');
 const lastNameError = document.getElementById('lastNameError');
 const gradeError = document.getElementById('gradeError');
 
-let grades = [];
-let editingRow = null;
+let students = [];
+let editingIndex = null;
 
 form.addEventListener('submit', function(event) {
     event.preventDefault();
-
     nameError.textContent = '';
     lastNameError.textContent = '';
     gradeError.textContent = '';
 
-    let isValid = true;
-    const gradeValue = parseFloat(gradeInput.value);
+    let valid = true;
+    const name = nameInput.value.trim();
+    const lastName = lastNameInput.value.trim();
+    const grade = parseFloat(gradeInput.value);
 
-    if (!nameInput.value.trim()) {
+    if (!name) {
         nameError.textContent = 'Por favor, ingrese el nombre.';
-        isValid = false;
+        valid = false;
     }
-    if (!lastNameInput.value.trim()) {
+    if (!lastName) {
         lastNameError.textContent = 'Por favor, ingrese el apellido.';
-        isValid = false;
+        valid = false;
     }
-    if (isNaN(gradeValue) || gradeValue < 1 || gradeValue > 7) {
-        gradeError.textContent = 'Ingrese una nota válida entre 1 y 7.';
-        isValid = false;
+    if (isNaN(grade) || grade < 1 || grade > 7) {
+        gradeError.textContent = 'Nota debe estar entre 1.0 y 7.0';
+        valid = false;
     }
 
-    if (!isValid) return;
+    if (!valid) return;
 
-    if (editingRow) {
-        // Editar fila existente
-        editingRow.cells[0].textContent = nameInput.value;
-        editingRow.cells[1].textContent = lastNameInput.value;
-        editingRow.cells[2].textContent = gradeValue.toFixed(1);
-        const index = editingRow.rowIndex - 1;
-        grades[index] = gradeValue;
-        editingRow = null;
+    const student = { name, lastName, grade };
+
+    if (editingIndex !== null) {
+        students[editingIndex] = student;
+        editingIndex = null;
     } else {
-        // Agregar nueva fila
+        students.push(student);
+    }
+
+    form.reset();
+    renderTable();
+});
+
+function renderTable() {
+    tableBody.innerHTML = '';
+    students.forEach((student, index) => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${nameInput.value}</td>
-            <td>${lastNameInput.value}</td>
-            <td>${gradeValue.toFixed(1)}</td>
-            <td><button class="edit-btn">Editar</button></td>
+            <td>${student.name}</td>
+            <td>${student.lastName}</td>
+            <td>${student.grade.toFixed(1)}</td>
+            <td>
+                <button class="action-btn edit-btn" onclick="editStudent(${index})">Editar</button>
+                <button class="action-btn delete-btn" onclick="deleteStudent(${index})">Eliminar</button>
+            </td>
         `;
         tableBody.appendChild(row);
-        grades.push(gradeValue);
-    }
-
-    updateAverage();
-    form.reset();
-});
-
-function updateAverage() {
-    if (grades.length === 0) {
-        averageDisplay.textContent = 'Promedio General del Curso: N/A';
-        return;
-    }
-    const sum = grades.reduce((a, b) => a + b, 0);
-    const avg = sum / grades.length;
-    averageDisplay.textContent = `Promedio General del Curso: ${avg.toFixed(2)}`;
+    });
+    updateStats();
 }
 
-tableBody.addEventListener('click', function (e) {
-    if (e.target.classList.contains('edit-btn')) {
-        const row = e.target.closest('tr');
-        editingRow = row;
+function editStudent(index) {
+    const student = students[index];
+    nameInput.value = student.name;
+    lastNameInput.value = student.lastName;
+    gradeInput.value = student.grade;
+    editingIndex = index;
+}
 
-        nameInput.value = row.cells[0].textContent;
-        lastNameInput.value = row.cells[1].textContent;
-        gradeInput.value = row.cells[2].textContent;
+function deleteStudent(index) {
+    students.splice(index, 1);
+    renderTable();
+}
+
+function updateStats() {
+    const total = students.length;
+    if (total === 0) {
+        averageDisplay.textContent = 'Promedio General del Curso: N/A';
+        statsDisplay.innerHTML = 'Total estudiantes: 0<br/>Aprobados: 0%<br/>Reprobados: 0%';
+        return;
     }
-});
+    const sum = students.reduce((acc, s) => acc + s.grade, 0);
+    const avg = sum / total;
+    averageDisplay.textContent = `Promedio General del Curso: ${avg.toFixed(2)}`;
+    const aprobados = students.filter(s => s.grade >= 4).length;
+    const porcentajeAprobados = ((aprobados / total) * 100).toFixed(0);
+    const porcentajeReprobados = (100 - porcentajeAprobados).toFixed(0);
+    statsDisplay.innerHTML = `Total estudiantes: ${total}<br/>
+                              Aprobados: ${porcentajeAprobados}%<br/>
+                              Reprobados: ${porcentajeReprobados}%`;
+}
