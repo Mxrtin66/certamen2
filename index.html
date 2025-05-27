@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Notas Front-End</title>
+    <title>Registro de Notas</title>
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
     <div class="container">
-        <h2>Notas Front-End</h2>
+        <h2>Registro de Notas de Estudiantes</h2>
         <div id="average">Promedio General del Curso: N/A</div>
+        <div id="stats">
+            Total estudiantes: 0<br/>
+            Aprobados: 0%<br/>
+            Reprobados: 0%
+        </div>
 
         <form id="studentForm" novalidate>
             <div class="form-group">
@@ -42,7 +47,6 @@
             <tbody></tbody>
         </table>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
